@@ -1,5 +1,5 @@
 [package]
-name = "olc-datafile"
+name = "olc-datafile-rust"
 version = "1.0.0"
 description = "Rust implementation of the OneLoneCoder datafile format"
 rust-version = "1.65.0"
@@ -13,7 +13,7 @@ keywords = ["olc", "datafile", "parsing", "file"]
 edition = "2021"
 
 [lib]
-name = "olc_datafile"
+name = "olc_datafile_rust"
 
 [dependencies]
 
