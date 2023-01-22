@@ -211,10 +211,6 @@ impl Datafile {
 
         let (node_name, rest) = name.split_at(dot_index.unwrap());
 
-        println!("{}", node_name);
-        println!("{}", rest);
-        println!("has prop {node_name}: {}", self.has_property(node_name));
-
         if self.has_property(node_name) {
             return self.get(node_name).get_property(&rest[1..]);
         }
