@@ -11,7 +11,7 @@
 //!
 //! In case you just want to compare the code to the original C++ version, you'll find
 //!
-//! * The Datafile class in [src/datafile.rs](src/datafile.rs)
+//! * The Datafile struct in [src/datafile.rs](src/datafile.rs)
 //! * The parsing/reading in [src/processor/reader.rs](src/processor/reader.rs)
 //! * The serialization/writing in [src/processor/writer.rs](src/processor/writer.rs)
 //!
