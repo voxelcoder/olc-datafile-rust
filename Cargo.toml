@@ -1,0 +1,21 @@
+[package]
+name = "olc-datafile"
+version = "1.0.0"
+description = "Rust implementation of the OneLoneCoder datafile format"
+rust-version = "1.65.0"
+authors = ["Velican Akcakaya <velican@akcakaya.net>"]
+license = "OLC-3"
+readme = "README.md"
+categories = ["data-structures", "file-formats", "serialization", "parsing"]
+homepage = "https://github.com/voxelcoder/olc-datafile-rust"
+repository = "https://github.com/voxelcoder/olc-datafile-rust"
+keywords = ["olc", "datafile", "parsing", "file"]
+edition = "2021"
+
+[lib]
+name = "olc_datafile"
+
+[dependencies]
+
+[[example]]
+name = "usage"
