@@ -1,8 +1,5 @@
 //! # olc-datafile-rust
 //! ---
-//! [![Downloads](https://img.shields.io/crates/d/olc-datafile-rust)](https://crates.io/crates/olc-datafile-rust)
-//! [![Version](https://img.shields.io/crates/v/olc-datafile-rust)](https://crates.io/crates/olc-datafile-rust)
-//! ---
 //!
 //! A rust library for reading and writing olc::DataFile files.
 //! The olc::DataFile format is a simple text file format for storing data in a human readable and editable format. In the
