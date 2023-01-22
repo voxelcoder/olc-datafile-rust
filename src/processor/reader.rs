@@ -43,7 +43,7 @@ impl<'a> Reader<'a> {
     /// read from.
     pub fn read(&self, path: &str) -> std::io::Result<()> {
         let reader = BufReader::new(File::open(path)?);
-        let lines = reader.lines().collect::<Vec<_>>();
+        let lines = reader.lines().collect();
 
         self.read_inner(&mut self.top_node.borrow_mut(), &lines, 0)
     }
@@ -67,7 +67,8 @@ impl<'a> Reader<'a> {
         skip: usize,
     ) -> std::io::Result<()> {
         for (i, line) in lines.iter().skip(skip).enumerate() {
-            let line = self.trim_line(line.as_ref(), i + 1)?;
+            let line_number = i + 1;
+            let line = self.trim_line(line.as_ref(), line_number)?;
 
             // An empty line or opening brace holds no meaning for the parser. We can skip it.
             if line.is_empty() || line.starts_with('{') {
@@ -87,9 +88,8 @@ impl<'a> Reader<'a> {
 
             // A line only containing text without any symbols marks a new node.
             if !line.contains('=') {
-                let new_node = parent_node.get(line);
-                self.read_inner(new_node.borrow_mut(), lines, i + skip + 1)?;
-                return Ok(());
+                let new_node = parent_node.get(line).borrow_mut();
+                return self.read_inner(new_node, lines, line_number + skip);
             }
 
             let split = line.split_once('=');
@@ -108,7 +108,7 @@ impl<'a> Reader<'a> {
     fn parse_value_from_line(&self, parent_node: &mut Datafile, (key, raw_value): (&str, &str)) {
         let mut is_in_quotes = false;
         let mut token_count = 0;
-        let mut token: String = String::new();
+        let mut token = String::new();
 
         for char in raw_value.chars() {
             // A token is delimited by quotation marks if it contains a list separator.
@@ -145,7 +145,8 @@ impl<'a> Reader<'a> {
 
     #[inline]
     fn push_token_to_node(&self, key: &str, token: &str, index: usize, node: &mut Datafile) {
-        node.get(key).set_string(token.trim(), index);
+        let (key, token) = (key.trim(), token.trim());
+        node.get(key).set_string(token, index);
     }
 
     fn construct_comment_node(&self, parent_node: &Datafile) -> Datafile {
@@ -153,22 +154,21 @@ impl<'a> Reader<'a> {
             Some(parent_node.list_separator),
             Some(&*parent_node.whitespace_sequence),
         );
+
         comment_node.is_comment = true;
         comment_node
     }
 
     fn trim_line<'b>(
         &self,
-        line_ref: Result<&'b String, &Error>,
+        line: Result<&'b String, &Error>,
         line_number: usize,
     ) -> Result<&'b str, Error> {
-        line_ref
-            .map_err(|error| {
-                Error::new(
-                    error.kind(),
-                    format!("Error reading line {line_number}: {}", error),
-                )
-            })
-            .map(|line| line.trim())
+        line.map(|line| line.trim()).map_err(|error| {
+            Error::new(
+                error.kind(),
+                format!("Error reading line {line_number}: {}", error),
+            )
+        })
     }
 }

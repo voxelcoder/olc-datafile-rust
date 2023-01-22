@@ -44,7 +44,7 @@ impl<'a> Writer<'a> {
         // Deviation from the original implementation. I just like this better. Removes the leading
         // newline at the top of the file.
         if self.buffer.starts_with('\n') {
-            self.buffer.replace_range(0..1, "");
+            self.buffer.remove(0);
         }
 
         file.write_all(self.buffer.as_bytes())
@@ -57,26 +57,46 @@ impl<'a> Writer<'a> {
     ///
     /// * `node` - datafile (node) to write
     /// * `indent` - the number of indentations to write before the node
-    fn write_node(&mut self, datafile: &'a Datafile, mut indent_level: usize) {
+    fn write_node(&mut self, datafile: &'a Datafile, indent_level: usize) {
         for (name, node) in datafile.object_vec.iter() {
             if node.object_vec.is_empty() {
-                self.write_value_key(node, name, indent_level);
-                self.write_list(node);
-                self.buffer.push('\n');
+                self.write_key(node, name, indent_level);
+                self.write_value(node);
                 continue;
             }
 
-            self.write_node_header(node, indent_level, name);
-
-            indent_level += 1;
-            self.write_node(node, indent_level);
-            indent_level = usize::max(0, indent_level - 1);
-
-            self.write_node_footer(node, indent_level);
+            self.write_node_header(indent_level, name);
+            self.write_node(node, indent_level + 1);
+            self.write_node_footer(indent_level);
         }
     }
 
-    /// Takes a node's contents and writes it to the buffer in list format.
+    /// Writes a node's key to the buffer. If the node has a value, it will be followed by an
+    /// equal sign. If the node is a comment, it will be written as a comment.
+    ///
+    /// # Example
+    ///
+    /// A node with a value:
+    ///
+    /// ```text
+    /// "foo = "
+    /// ```
+    ///
+    /// A node with a comment:
+    ///
+    /// ```txt
+    /// "#foo"
+    /// ```
+    #[inline]
+    fn write_key(&mut self, node: &Datafile, name: &str, indent_level: usize) {
+        self.buffer.push_str(&format!(
+            "{}{name}{}",
+            self.get_indentation(indent_level),
+            if node.is_comment { "" } else { " = " },
+        ));
+    }
+
+    /// Takes a node's content and writes it to the buffer in list format.
     ///
     /// # Example
     /// (The following examples assume a list separator of `,` specified in the datafile.)
@@ -101,7 +121,7 @@ impl<'a> Writer<'a> {
     /// ""foo, "bar, baz""
     /// ```
     #[inline]
-    fn write_list(&mut self, node: &Datafile) {
+    fn write_value(&mut self, node: &Datafile) {
         self.buffer.push_str(
             &node
                 .contents
@@ -116,6 +136,8 @@ impl<'a> Writer<'a> {
                 .collect::<Vec<_>>()
                 .join(&format!("{} ", self.data_file.list_separator)),
         );
+
+        self.buffer.push('\n');
     }
 
     /// Writes a node's header to the buffer.
@@ -128,49 +150,22 @@ impl<'a> Writer<'a> {
     /// {
     /// ```
     #[inline]
-    fn write_node_header(&mut self, node: &Datafile, indent_level: usize, name: &str) {
-        let indentation = Self::get_indentation(indent_level, &node.whitespace_sequence);
+    fn write_node_header(&mut self, indent_level: usize, name: &str) {
+        let indentation = self.get_indentation(indent_level);
         self.buffer
-            .push_str(&format!("\n{indentation}{}\n{indentation}{{\n", name,));
+            .push_str(&format!("\n{indentation}{}\n{indentation}{{\n", name));
     }
 
     /// Writes a node's footer to the buffer. This is just the closing brace.
     #[inline]
-    fn write_node_footer(&mut self, node: &Datafile, indent_level: usize) {
-        self.buffer.push_str(&format!(
-            "{}}}\n",
-            Self::get_indentation(indent_level, &node.whitespace_sequence)
-        ));
-    }
-
-    /// Writes a node's key to the buffer. If the node has a value, it will be followed by an
-    /// equal sign. If the node is a comment, it will be written as a comment.
-    ///
-    /// # Example
-    ///
-    /// A node with a value:
-    ///
-    /// ```text
-    /// "foo = "
-    /// ```
-    ///
-    /// A node with a comment:
-    ///
-    /// ```txt
-    /// "#foo"
-    /// ```
-    #[inline]
-    fn write_value_key(&mut self, node: &Datafile, name: &str, indent_level: usize) {
-        self.buffer.push_str(&format!(
-            "{}{name} {} ",
-            Self::get_indentation(indent_level, &node.whitespace_sequence),
-            if node.is_comment { "" } else { "=" }
-        ));
+    fn write_node_footer(&mut self, indent_level: usize) {
+        self.buffer
+            .push_str(&format!("{}}}\n", self.get_indentation(indent_level)));
     }
 
     /// Returns a string of indentation based on the node's indentation level.  
     #[inline]
-    fn get_indentation(indent_level: usize, indentation: &str) -> String {
-        (0..indent_level).map(|_| indentation).collect::<String>()
+    fn get_indentation(&self, indent_level: usize) -> String {
+        self.data_file.whitespace_sequence.repeat(indent_level)
     }
 }

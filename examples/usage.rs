@@ -1,7 +1,7 @@
 use olc_datafile_rust::Datafile;
 
 fn main() {
-    let mut datafile = Datafile::new(Some(','), Some(" "));
+    let mut datafile = Datafile::new(None, None);
 
     let some_node = datafile.get("some_node");
     some_node.get("name").set_string("Javid", 0);
@@ -21,10 +21,14 @@ fn main() {
         .write("./datafile.txt")
         .expect("Failed to write datafile");
 
-    let mut datafile = Datafile::new(Some(','), Some(" "));
+    let mut datafile = Datafile::new(None, None);
     datafile
         .read("./datafile.txt")
         .expect("Failed to read datafile");
+
+    datafile
+        .write("./datafile2.txt")
+        .expect("Failed to write datafile");
 
     println!("{:?}", datafile.get("some_node"));
 }
