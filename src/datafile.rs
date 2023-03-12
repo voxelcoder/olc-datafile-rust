@@ -67,11 +67,12 @@ impl Default for Datafile {
 impl Datafile {
     /// Creates a new Datafile. The `list_separator` and `whitespace_sequence` arguments are
     /// optional. If not specified, they will default to `,` and `\t` respectively.
+    #[must_use]
     pub fn new(list_separator: Option<char>, whitespace_sequence: Option<&str>) -> Self {
         Self {
-            list_separator: list_separator.unwrap_or(Datafile::default().list_separator),
+            list_separator: list_separator.unwrap_or(Self::default().list_separator),
             whitespace_sequence: whitespace_sequence
-                .unwrap_or(&Datafile::default().whitespace_sequence)
+                .unwrap_or(&Self::default().whitespace_sequence)
                 .to_string(),
             ..Default::default()
         }
@@ -132,6 +133,7 @@ impl Datafile {
     /// Gets a string value from the given index. If the index is out of bounds, an empty string
     /// will be returned.
     #[inline]
+    #[must_use]
     pub fn get_string(&self, index: usize) -> String {
         self.contents.get(index).unwrap_or(&String::new()).clone()
     }
@@ -145,6 +147,7 @@ impl Datafile {
     /// Gets a real (numeric) value from the given index. If the index is out of bounds, or the
     /// value cannot be parsed as a real, 0.0 will be returned.
     #[inline]
+    #[must_use]
     pub fn get_real(&self, index: usize) -> f32 {
         f32::deserialize(&self.get_string(index))
     }
@@ -159,12 +162,14 @@ impl Datafile {
     /// cannot be parsed as an integer, 0 will be returned. Real values will be truncated, not
     /// rounded.
     #[inline]
+    #[must_use]
     pub fn get_integer(&self, index: usize) -> i32 {
         i32::deserialize(&self.get_string(index))
     }
 
     /// Returns the number of items in the datafile. Does not include child node's contents.
     #[inline]
+    #[must_use]
     pub fn get_value_count(&self) -> usize {
         self.contents.len()
     }
@@ -172,14 +177,15 @@ impl Datafile {
     /// Returns a child node with the given name. If the node does not exist, it will be created.
     /// This can be chained to create a path of nodes. For example, `datafile.get("a").get("b")`
     /// will either return the node `b` under `a`, or create it if it does not exist.
-    pub fn get(&mut self, name: &str) -> &mut Datafile {
+    pub fn get(&mut self, name: &str) -> &mut Self {
         if !self.object_map.contains_key(name) {
-            let name = name.to_string();
-            self.object_map.insert(name.clone(), self.object_vec.len());
+            self.object_map
+                .insert(name.to_string(), self.object_vec.len());
+
             self.push_object(
-                &name,
-                Datafile::new(Some(self.list_separator), Some(&self.whitespace_sequence)),
-            )
+                name,
+                Self::new(Some(self.list_separator), Some(&self.whitespace_sequence)),
+            );
         }
 
         &mut self.object_vec[self.object_map[name]].1
@@ -187,6 +193,7 @@ impl Datafile {
 
     /// Checks if a child node or value with the given name exists.
     #[inline]
+    #[must_use]
     pub fn has_property(&self, name: &str) -> bool {
         self.object_map.contains_key(name)
     }
@@ -202,29 +209,27 @@ impl Datafile {
     ///
     /// let node = datafile.get_property("a.b.c");
     /// ```
-    pub fn get_property(&mut self, name: &str) -> &Datafile {
-        let dot_index = name.find('.');
-
-        if dot_index.is_none() {
+    pub fn get_property(&mut self, name: &str) -> &Self {
+        let Some(dot_index) = name.find('.') else {
             return self.get(name);
-        }
+        };
 
-        let (node_name, rest) = name.split_at(dot_index.unwrap());
+        let (node_name, rest) = name.split_at(dot_index);
 
         if self.has_property(node_name) {
-            return self.get(node_name).get_property(&rest[1..]);
+            self.get(node_name).get_property(&rest[1..])
+        } else {
+            self.get(node_name)
         }
-
-        self.get(node_name)
     }
 
     /// Does the same as `get_property`, but writes it out in array notation.   
-    pub fn get_indexed_property(&mut self, name: &str, index: usize) -> &Datafile {
+    pub fn get_indexed_property(&mut self, name: &str, index: usize) -> &Self {
         self.get_property(&format!("{}[{}]", name, index))
     }
 
     #[inline]
-    pub(crate) fn push_object(&mut self, name: &str, object: Datafile) {
+    pub(crate) fn push_object(&mut self, name: &str, object: Self) {
         self.object_vec.push((name.to_string(), object));
     }
 }

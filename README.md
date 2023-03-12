@@ -2,7 +2,7 @@
 ---
 
 A rust library for reading and writing olc::DataFile files.
-The olc::DataFile format is a simple text file format for storing data in a human readable and editable format. In the
+The olc::DataFile format is a simple text file format for storing data in a human-readable and editable format. In the
 words of the original author, it's "great for serializing and deserializing data, i.e. Saving Things!".
 
 The original C++ implementation can be

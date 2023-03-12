@@ -1,8 +1,8 @@
 //! # olc-datafile-rust
 //! ---
 //!
-//! A rust library for reading and writing olc::DataFile files.
-//! The olc::DataFile format is a simple text file format for storing data in a human readable and editable format. In the
+//! A rust library for reading and writing `olc::DataFile` files.
+//! The `olc::DataFile` format is a simple text file format for storing data in a human readable and editable format. In the
 //! words of the original author, it's "great for serializing and deserializing data, i.e. Saving Things!".
 //!
 //! The original C++ implementation can be found [in the OLC::PixelGameEngine repository](https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/utilities/olcUTIL_DataFile.h).
@@ -100,6 +100,9 @@
 //! THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 //! (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //! OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#![warn(rust_2018_idioms)]
+#![forbid(unsafe_code, missing_debug_implementations)]
 
 #[rustfmt::skip]
 pub use {

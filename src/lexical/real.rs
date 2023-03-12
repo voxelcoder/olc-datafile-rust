@@ -6,8 +6,8 @@ impl Serializable<'_> for f32 {
     }
 
     fn deserialize(data: &str) -> Self {
-        data.parse::<f32>()
-            .unwrap_or_else(|_| data.replace(',', ".").parse::<f32>().unwrap_or(0.0))
+        data.parse::<Self>()
+            .unwrap_or_else(|_| data.replace(',', ".").parse::<Self>().unwrap_or_default())
     }
 }
 

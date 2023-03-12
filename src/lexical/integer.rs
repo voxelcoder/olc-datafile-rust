@@ -5,10 +5,11 @@ impl Serializable<'_> for i32 {
         self.to_string()
     }
 
+    #[allow(clippy::cast_possible_truncation)]
     fn deserialize(data: &str) -> Self {
-        data.parse::<i32>()
+        data.parse::<Self>()
             // If a float is passed, we just truncate it.
-            .unwrap_or_else(|_| data.replace(',', ".").parse::<f32>().unwrap_or(0.0) as i32)
+            .unwrap_or_else(|_| data.replace(',', ".").parse::<f32>().unwrap_or(0.0) as Self)
     }
 }
 

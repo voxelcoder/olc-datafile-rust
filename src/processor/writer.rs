@@ -18,13 +18,15 @@ use crate::datafile::Datafile;
 ///
 /// datafile.write("path/to/destination").unwrap();
 /// ```
+#[derive(Debug)]
 pub struct Writer<'a> {
     pub data_file: &'a Datafile,
     buffer: String,
 }
 
 impl<'a> Writer<'a> {
-    pub fn new(data_file: &'a Datafile) -> Self {
+    #[must_use]
+    pub const fn new(data_file: &'a Datafile) -> Self {
         Self {
             data_file,
             buffer: String::new(),
@@ -58,7 +60,7 @@ impl<'a> Writer<'a> {
     /// * `node` - datafile (node) to write
     /// * `indent` - the number of indentations to write before the node
     fn write_node(&mut self, datafile: &'a Datafile, indent_level: usize) {
-        for (name, node) in datafile.object_vec.iter() {
+        for (name, node) in &datafile.object_vec {
             if node.object_vec.is_empty() {
                 self.write_key(node, name, indent_level);
                 self.write_value(node);

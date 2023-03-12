@@ -12,7 +12,7 @@ impl Serializable<'_> for String {
 
 impl<'a> Serializable<'a> for &'a str {
     fn serialize(&self) -> String {
-        self.to_string()
+        (*self).to_string()
     }
 
     fn deserialize(data: &'a str) -> Self {

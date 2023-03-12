@@ -45,7 +45,7 @@ impl<'a> Reader<'a> {
         let reader = BufReader::new(File::open(path)?);
         let lines = reader.lines().collect();
 
-        self.read_inner(&mut self.top_node.borrow_mut(), &lines, 0)
+        Self::read_inner(&mut self.top_node.borrow_mut(), &lines, 0)
     }
 
     /// Recursively parses a datafile node and it's children.
@@ -60,15 +60,14 @@ impl<'a> Reader<'a> {
     /// end of the file. This also means that  this function may overflow the stack if the file
     /// is too large. This is not a concern for the intended use of this library,
     /// but it is something to be aware of.
-    fn read_inner<'r>(
-        &self,
+    fn read_inner(
         parent_node: &mut Datafile,
-        lines: &'r Vec<Result<String, Error>>,
+        lines: &Vec<Result<String, Error>>,
         skip: usize,
     ) -> std::io::Result<()> {
         for (i, line) in lines.iter().skip(skip).enumerate() {
             let line_number = i + 1;
-            let line = self.trim_line(line.as_ref(), line_number)?;
+            let line = Self::trim_line(line.as_ref(), line_number)?;
 
             // An empty line or opening brace holds no meaning for the parser. We can skip it.
             if line.is_empty() || line.starts_with('{') {
@@ -76,7 +75,7 @@ impl<'a> Reader<'a> {
             }
 
             if line.starts_with('#') {
-                let comment_node = self.construct_comment_node(parent_node.borrow_mut());
+                let comment_node = Self::construct_comment_node(parent_node.borrow_mut());
                 parent_node.push_object(line, comment_node);
                 continue;
             }
@@ -89,7 +88,7 @@ impl<'a> Reader<'a> {
             // A line only containing text without any symbols marks a new node.
             if !line.contains('=') {
                 let new_node = parent_node.get(line).borrow_mut();
-                return self.read_inner(new_node, lines, line_number + skip);
+                return Self::read_inner(new_node, lines, line_number + skip);
             }
 
             let split = line.split_once('=');
@@ -99,13 +98,13 @@ impl<'a> Reader<'a> {
                 continue;
             }
 
-            self.parse_value_from_line(parent_node, split.unwrap());
+            Self::parse_value_from_line(parent_node, split.unwrap());
         }
 
         Ok(())
     }
 
-    fn parse_value_from_line(&self, parent_node: &mut Datafile, (key, raw_value): (&str, &str)) {
+    fn parse_value_from_line(parent_node: &mut Datafile, (key, raw_value): (&str, &str)) {
         let mut is_in_quotes = false;
         let mut token_count = 0;
         let mut token = String::new();
@@ -129,7 +128,7 @@ impl<'a> Reader<'a> {
 
             // A list separator marks the end of a token, and the start of a new one.
             if char == parent_node.list_separator {
-                self.push_token_to_node(key, &token, token_count, parent_node);
+                Self::push_token_to_node(key, &token, token_count, parent_node);
                 token_count += 1;
                 token.clear();
                 continue;
@@ -139,17 +138,17 @@ impl<'a> Reader<'a> {
         }
 
         if !token.is_empty() {
-            self.push_token_to_node(key, &token, token_count, parent_node);
+            Self::push_token_to_node(key, &token, token_count, parent_node);
         }
     }
 
     #[inline]
-    fn push_token_to_node(&self, key: &str, token: &str, index: usize, node: &mut Datafile) {
+    fn push_token_to_node(key: &str, token: &str, index: usize, node: &mut Datafile) {
         let (key, token) = (key.trim(), token.trim());
         node.get(key).set_string(token, index);
     }
 
-    fn construct_comment_node(&self, parent_node: &Datafile) -> Datafile {
+    fn construct_comment_node(parent_node: &Datafile) -> Datafile {
         let mut comment_node = Datafile::new(
             Some(parent_node.list_separator),
             Some(&*parent_node.whitespace_sequence),
@@ -160,7 +159,6 @@ impl<'a> Reader<'a> {
     }
 
     fn trim_line<'b>(
-        &self,
         line: Result<&'b String, &Error>,
         line_number: usize,
     ) -> Result<&'b str, Error> {
